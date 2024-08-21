@@ -1,0 +1,16 @@
+object ParticlesUltimate: TParticlesUltimate
+  Left = 411
+  Height = 360
+  Top = 229
+  Width = 640
+  Caption = 'ParticlesUltimate'
+  OnCreate = FormCreate
+  OnPaint = FormPaint
+  LCLVersion = '3.4.0.0'
+  object TimerUpdate: TTimer
+    Interval = 33
+    OnTimer = TimerUpdateTimer
+    Left = 10
+    Top = 10
+  end
+end
