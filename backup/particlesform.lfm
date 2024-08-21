@@ -1,8 +1,0 @@
-object UltimateParticles: TUltimateParticles
-  Left = 688
-  Height = 240
-  Top = 222
-  Width = 320
-  Caption = 'UltimateParticles'
-  LCLVersion = '3.4.0.0'
-end
