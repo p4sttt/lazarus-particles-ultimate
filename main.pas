@@ -8,21 +8,26 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, Math;
 
 const
-  BoundsOffset = 10;
+  ParticlesCount = 500;
 
-  ParticlesCount = 200;
+  MaxAvaibleSize = 10;
 
-  MaxParticleSize = 8;
-  MinParticleSize = 5;
+  MaxRadius = 10;
+  MaxSize = 5;
+  MinSize = 1;
 
-  MaxParticleVelocity = 30;
-  MinParticleVelocity = 5;
+  AngleCoef = 1 / 200;
+  RadiusCoef = 5 / 4;
+  SizeCoef = 1 / 5000;
+
+  Accseleration = 1 / 150;
 
 type
   TParticle = record
-    Radius: single;
     Angle: single;
-    Size: integer;
+    Radius: single;
+    Size: single;
+
     Velocity: single;
   end;
 
@@ -58,15 +63,15 @@ implementation
 
 procedure TParticlesUltimate.FormCreate(Sender: TObject);
 begin
-  Self.MakeParticles;
+  MakeParticles;
 end;
 
 procedure TParticlesUltimate.FormPaint(Sender: TObject);
 var
-  Curr: TParticle;
   X, Y: integer;
-  MidX, MidY: single;
+  MiddleX, MiddleY: integer;
   I: integer;
+  Size: integer;
 begin
   Canvas.Brush.Color := clBlack;
   Canvas.fillRect(0, 0, ClientWidth, ClientHeight);
@@ -74,62 +79,66 @@ begin
   Canvas.Pen.Style := psClear;
   Canvas.Brush.Color := clWhite;
 
-  MidX := ClientWidth / 2;
-  MidY := ClientHeight / 2;
+  MiddleX := ClientWidth div 2;
+  MiddleY := ClientHeight div 2;
 
-  for I := 0 to High(Self.Particles) do
+  for I := 0 to High(Particles) do
   begin
-    Curr := Self.Particles[I];
-    X := Trunc(MidX + Curr.Radius * Cos(Curr.Angle));
-    Y := Trunc(MidY + Curr.Radius * Sin(Curr.Angle));
+    X := Trunc(MiddleX + Particles[I].Radius * Cos(Particles[I].Angle));
+    Y := Trunc(MiddleY + Particles[I].Radius * Sin(Particles[I].Angle));
+    Size := Trunc(Particles[I].Size);
 
-    Canvas.Rectangle(X, Y, X + Curr.Size, Y + Curr.Size);
+    Canvas.Rectangle(X, Y, X + Size, Y + Size);
   end;
 end;
 
 procedure TParticlesUltimate.TimerUpdateTimer(Sender: TObject);
 begin
-  Self.UpdateParticles;
-  Self.Invalidate;
+  UpdateParticles;
+  Invalidate;
 end;
 
 procedure TParticlesUltimate.MakeParticles;
 var
   I: integer;
 begin
-  for I := 0 to High(Self.Particles) do
-    Self.Particles[I] := MakeParticle;
+  for I := 0 to High(Particles) do
+    Particles[I] := MakeParticle;
 end;
 
 procedure TParticlesUltimate.UpdateParticles;
 var
-  I: integer;
   X, Y: integer;
-  MidX, MidY: integer;
+  MiddleX, MiddleY: integer;
+  I: integer;
 begin
-  MidX := ClientWidth div 2;
-  MidY := ClientHeight div 2;
+  MiddleX := ClientWidth div 2;
+  MiddleY := ClientHeight div 2;
 
-  for I := 0 to High(Self.Particles) do
+  for I := 0 to High(Particles) do
   begin
-    Self.Particles[I].Angle := Self.Particles[I].Angle + 0.005 * Pi;
-    Self.Particles[I].Radius := Self.Particles[I].Radius + Self.Particles[I].Velocity;
+    Particles[I].Angle := Particles[I].Angle + Particles[I].Velocity * AngleCoef;
+    Particles[I].Radius := Particles[I].Radius + Particles[I].Velocity * RadiusCoef;
+    Particles[I].Size := Min(MaxAvaibleSize, Particles[I].Size +
+      Particles[I].Radius * SizeCoef);
 
-    X := Trunc(MidX + Self.Particles[I].Radius * Cos(Self.Particles[I].Angle));
-    Y := Trunc(MidY + Self.Particles[I].Radius * Sin(Self.Particles[I].Angle));
+    Particles[I].Velocity := Particles[I].Velocity + Accseleration;
 
-    if (X >= ClientWidth) or (Y >= ClientHeight) or (X <= 0) or (Y <= 0) then
-      Self.Particles[I] := Self.MakeParticle;
+    X := Trunc(MiddleX + Particles[I].Radius * Cos(Particles[I].Angle));
+    Y := Trunc(MiddleY + Particles[I].Radius * Sin(Particles[I].Angle));
+
+    if (X <= -MaxAvaibleSize) or (Y >= ClientHeight + MaxAvaibleSize) then
+      Particles[I] := MakeParticle;
   end;
 end;
 
 function TParticlesUltimate.MakeParticle: TParticle;
 begin
-  Result.Angle := Random * 2 * Pi;
-  Result.Radius := RandomRange(0, BoundsOffset);
-  Result.Size := RandomRange(MinParticleSize, MaxParticleSize);
-  Result.Velocity := RandomRange(MinParticleVelocity, MaxParticleVelocity) * 0.1;
-end;
+  Result.Velocity := Random;
 
+  Result.Angle := Random * 2 * Pi;
+  Result.Radius := Result.Velocity * MaxRadius;
+  Result.Size := MinSize + Result.Velocity * MaxSize;
+end;
 
 end.
